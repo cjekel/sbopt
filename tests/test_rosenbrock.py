@@ -1,5 +1,9 @@
-import rbfopt
+import os
+import unittest
 import numpy as np
+import sbopt
+
+os.environ['OMP_NUM_THREADS'] = '1'
 
 
 def my_fun(x):
@@ -9,11 +13,21 @@ def my_fun(x):
     return A + B
 
 
-bounds = np.zeros((2, 2))
-bounds[:, 0] = -3.0
-bounds[:, 1] = 3.0
+class TestEverything(unittest.TestCase):
 
-np.random.seed(1234124)
+    def test_rosenbrock(self):
+        bounds = np.zeros((2, 2))
+        bounds[:, 0] = -3.0
+        bounds[:, 1] = 3.0
 
-my_opt = rbfopt.RbfOpt(my_fun, bounds)
-my_opt.minimize()
+        np.random.seed(1234124)
+
+        my_opt = sbopt.SbOpt(my_fun, bounds)
+        x, y, _, _ = my_opt.minimize(verbose=0)
+        self.assertTrue(np.isclose(y, 0.0, rtol=1e-4, atol=1e-4))
+        self.assertTrue(np.isclose(x[0], 1.0, rtol=1e-2, atol=1e-2))
+        self.assertTrue(np.isclose(x[1], 1.0, rtol=1e-2, atol=1e-2))
+
+
+if __name__ == '__main__':
+    unittest.main()

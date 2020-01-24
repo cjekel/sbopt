@@ -1,2 +1,2 @@
 # rbfopt_py
-WIP. Simple Surrogate Based Optionation in Python.
+WIP. Simple surrogate-based optimization in Python.
