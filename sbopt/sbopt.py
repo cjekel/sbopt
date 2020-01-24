@@ -43,18 +43,14 @@ class SbOpt(object):
         self.min_y = np.nan
         self.min_x = np.nan
 
-    def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1):
-        # perform initial design
-        lhd = lhs(self.n_dim, samples=self.initial_design_ndata)
-        self.X[:, :self.n_dim] = self.transfrom_bounds(lhd)
+    def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1,
+                 initialize=True):
 
-        # evaluate initial design
-        for i, j in enumerate(self.X):
-            self.X[i, self.n_dim] = self.min_function(j[:self.n_dim])
+        if initialize:
+            self.initialize()
 
         self.find_min()
 
-        # fit rbf
         self.fit_rbf()
 
         verbose_count = 0
@@ -114,6 +110,22 @@ class SbOpt(object):
         max_iter_conv = iteration == max_iter - 1
         best_count_conv = best_count == n_same_best
         return self.min_x, self.min_y, max_iter_conv, best_count_conv
+
+    def initialize(self):
+        if self.initial_design == 'latin':
+            # perform initial design
+            lhd = lhs(self.n_dim, samples=self.initial_design_ndata)
+            self.X[:, :self.n_dim] = self.transfrom_bounds(lhd)
+        elif self.initial_design == 'random':
+            x = np.random.random((self.initial_design_ndata, self.n_dim))
+            self.X[:, :self.n_dim] = self.transfrom_bounds(lhd)
+        else:
+            err = str(self.initial_design) + ' is not valid initial design'
+            raise ValueError(err)
+
+        # evaluate initial design
+        for i, j in enumerate(self.X):
+            self.X[i, self.n_dim] = self.min_function(j[:self.n_dim])
 
     def find_min(self):
         # find the min
