@@ -10,7 +10,7 @@ install:
   - pip install pytest --upgrade
   - pip install . --no-cache-dir
 script:
-  - pytest --cov=sbopt
+  - pytest --cov=sbopt tests/
 before_script:
   - flake8 sbopt
   - pytest --version
