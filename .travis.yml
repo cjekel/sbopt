@@ -6,6 +6,8 @@ python:
   - "3.6"
   - "3.7"
 install:
+  - pip install coverage==4.5.4
+  - pip install python-coveralls
   - pip install flake8 pytest-cov pyDOE
   - pip install pytest --upgrade
   - pip install . --no-cache-dir
@@ -15,6 +17,4 @@ before_script:
   - flake8 sbopt
   - pytest --version
 after_success:
-  - pip install coverage==4.5.4
-  - pip install python-coveralls
   - coveralls
