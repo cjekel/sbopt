@@ -17,7 +17,7 @@ bounds[:, 1] = 3.0
 np.random.seed(1234124)
 
 # initialize the RbfOpt object
-my_opt = sbopt.RBfOpt(my_fun,  # your objective function to minimize
+my_opt = sbopt.RbfOpt(my_fun,  # your objective function to minimize
                       bounds,  # bounds for your design variables
                       initial_design='latin',  # initial design type
                       # 'latin' default, or 'random'
