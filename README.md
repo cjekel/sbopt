@@ -17,7 +17,7 @@ The general procedure can be described as:
 
 # What functions can we optimize with sbopt
 
-sbopt can minimize single objective functions with design variable bounds. 
+sbopt can minimize single objective functions with design variable bounds.
 
 While sbopt is a black-box optimizer, it may struggle with:
 - noisy or stochastic objective functions
