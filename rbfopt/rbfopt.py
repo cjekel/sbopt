@@ -111,6 +111,10 @@ class RbfOpt(object):
                 print('in', n_same_best, 'iterations.')
                 break
 
+        max_iter_conv = iteration == max_iter - 1
+        best_count_conv = best_count == n_same_best
+        return self.min_x, self.min_y, max_iter_conv, best_count_conv
+
     def find_min(self):
         # find the min
         min_ind = np.nanargmin(self.X[:, self.n_dim])
