@@ -10,7 +10,7 @@ sbopt includes a RbfOpt object as a surrogate-based optimizer. This optimizes a 
 
 The general procedure can be described as:
 
-0. Perform initial design on the objective function and fit the radial basis function to the response.
+0. Perform initial design on the objective function. Then fit a radial basis function to the response.
 1. Find the minimum of the radial basis function by performing multiple [L_BFGS_B](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html) local optimizations.
 2. Evaluate the objective function at the optimum location from the multiple L_BFGS_B runs. This occurs only if the optimum location is at least a distance ```eps``` from any previous design point. Otherwise, the objective function is randomly sampled.
 3. Fit new radial basis function to the response. This uses the new design point from step 2, along with all previous design points.
