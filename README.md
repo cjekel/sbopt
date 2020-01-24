@@ -1,4 +1,7 @@
-# rbfopt_py
+# sbopt
+
+[![Build Status](https://travis-ci.com/cjekel/sbopt.svg?branch=master)](https://travis-ci.com/cjekel/sbopt) [![Coverage Status](https://coveralls.io/repos/github/cjekel/sbopt/badge.svg?branch=master)](https://coveralls.io/github/cjekel/sbopt?branch=master)
+
 WIP. Simple surrogate-based optimization in Python.
 
 # What is Surrogate-based optimization?
