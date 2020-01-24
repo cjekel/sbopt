@@ -4,7 +4,24 @@
 
 WIP. Simple surrogate-based optimization in Python.
 
-# What functions is 
+# How does this work
+
+sbopt includes a RbfOpt object as a surrogate-based optimizer. This optimizes a black-box function using [radial basis functions](https://en.wikipedia.org/wiki/Radial_basis_function) as the surrogate.
+
+The general procedure can be described as:
+0. Perform initial design on the objective function and fit the radial basis function to the response.
+1. Find the minimum of the radial basis function by performing multiple [L_BFGS_B](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html) local optimizations.
+2. Evaluate the objective function at the optiumum location from the multiple L_BFGS_B runs. If the optimum location is not greater than a distance ```eps``` from a previous design point, try another design location.
+3. Fit new radial basis function to the updated response.
+4. Repeat steps 1 through 3 until convergence.
+
+# What functions can we optimize with sbopt
+
+sbopt can minimize single objective functions with design variable bounds. 
+
+While sbopt is a black-box optimizer, it may struggle with:
+- noisy or stochastic objective functions
+- noncontinuous objective functions
 
 # Install
 
