@@ -6,7 +6,15 @@ WIP. Simple surrogate-based optimization in Python.
 
 # Install
 
+```shell
+pip install git+https://github.com/cjekel/sbopt
+```
+
 # Example
+
+```python
+
+```
 
 # Requirements
 
