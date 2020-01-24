@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.interpolate import Rbf
 from scipy.optimize import fmin_l_bfgs_b
+from scipy.spatial.distance import cdist
 from pyDOE import lhs
 
 
@@ -38,7 +39,11 @@ class RbfOpt(object):
         # initialize the rbf model
         self.Rbf = None
 
-    def minimize(self, max_iter=100, eps=1e-6, verbose=1):
+        # initialize best values
+        self.min_y = np.nan
+        self.min_x = np.nan
+
+    def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1):
         # perform initial design
         lhd = lhs(self.n_dim, samples=self.initial_design_ndata)
         self.X[:, :self.n_dim] = self.transfrom_bounds(lhd)
@@ -53,11 +58,11 @@ class RbfOpt(object):
         self.fit_rbf()
 
         verbose_count = 0
+        best_count = 0
 
         for iteration in range(max_iter):
 
             verbose_count += 1
-
             res_x = np.zeros((self.n_local_optimze, self.n_dim))
             res_y = np.zeros(self.n_local_optimze)
 
@@ -79,24 +84,32 @@ class RbfOpt(object):
                 # print(res_x)
                 res_y[j] = res[1]
 
-            # find the best local optimum result
-            y_ind = np.nanargmin(res_y)
-            # evaluate at the best x
-            self.evaluate_new(res_x[y_ind])
+            # add new design point
+            self.add_new_design_point(res_x, res_y, eps)
 
             # find the min
             min_ind = np.nanargmin(self.X[:, self.n_dim])
-            self.min_y = self.X[min_ind, self.n_dim]
-            self.min_x = self.X[min_ind, :self.n_dim]
+            if self.min_y == self.X[min_ind, self.n_dim]:
+                best_count += 1
+            else:
+                best_count = 0
+                self.min_y = self.X[min_ind, self.n_dim]
+                self.min_x = self.X[min_ind, :self.n_dim]
 
+            # if safe:
+            #     print('New design point added!')
+            # a new design point is added every iteration!
 
-            # check to print
             if verbose_count == verbose:
                 print('iteration: ', iteration)
                 print('best design variables: ', self.min_x)
                 print('best function value: ', self.min_y)
                 print('\n')
                 verbose_count = 0
+            if best_count == n_same_best:
+                print('Exiting. Best function value has not changed')
+                print('in', n_same_best, 'iterations.')
+                break
 
     def find_min(self):
         # find the min
@@ -104,12 +117,11 @@ class RbfOpt(object):
         self.min_y = self.X[min_ind, self.n_dim]
         self.min_x = self.X[min_ind, :self.n_dim]
 
-
     def fit_rbf(self):
-        self.Rbf = Rbf(self.X[:, 0], self.X[:, 1], self.X[:, 2])  # radial basis function interpolator instance
+        self.Rbf = Rbf(*self.X.T)
 
     def rbf_eval(self, x):
-        return self.Rbf(x[0], x[1])
+        return self.Rbf(*x.T)
 
     def transfrom_bounds(self, x):
         """
@@ -135,3 +147,31 @@ class RbfOpt(object):
         self.X = np.vstack([self.X, new_row])
         # fit the Rbf
         self.fit_rbf()
+
+    def check_new_distance(self, x, eps):
+        # check if x is within a certain distance of previous points
+        x = x.reshape(1, -1)
+        dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
+        # ensure that the minimum distance is greater than eps
+        return np.nanmin(dist) > eps
+
+    def add_new_design_point(self, res_x, res_y, eps):
+        # find the best local optimum result
+        safe = False
+        while not safe and res_y.size > 0:
+            y_ind = np.nanargmin(res_y)
+            safe = self.check_new_distance(res_x[y_ind], eps)
+            # evaluate at the best x
+            if safe:
+                self.evaluate_new(res_x[y_ind])
+            # delete this point, and try another
+            res_y = np.delete(res_y, y_ind, axis=0)
+            res_x = np.delete(res_x, y_ind, axis=0)
+
+        while not safe:
+            # generate 1 random point, and attempt to add
+            x_temp = np.random.random((1, self.n_dim))
+            x_temp = self.transfrom_bounds(x_temp)
+            safe = self.check_new_distance(x_temp, eps)
+            if safe:
+                self.evaluate_new(x_temp.flatten())
