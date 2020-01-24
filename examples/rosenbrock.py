@@ -36,7 +36,7 @@ my_opt = sbopt.SbOpt(my_fun,  # your objective function to minimize
 result = my_opt.minimize(max_iter=100,  # maximum number of iterations
                          # (default)
                          n_same_best=20,  # number of iterations to run
-                         # without improving best function value
+                         # without improving best function value (default)
                          eps=1e-6,  # minimum distance a new design point
                          # may be from an existing design point (default)
                          verbose=1,  # number of iterations to go for
