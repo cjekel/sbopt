@@ -16,4 +16,5 @@ before_script:
   - pytest --version
 after_success:
   - pip install python-coveralls
+  - pip install coverage<5.0.0
   - coveralls

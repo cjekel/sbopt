@@ -4,6 +4,19 @@
 
 WIP. Simple surrogate-based optimization in Python.
 
+# Install
+
+# Example
+
+# Requirements
+
+```python
+    "numpy >= 1.14.0",
+    "scipy >= 0.19.0",
+    "pyDOE >= 0.3.8",
+    "setuptools >= 38.6.0",
+```
+
 # What is Surrogate-based optimization?
 
 Sometimes it is desirable to optimize a function that is really expensive. In these situations, we only want to evaluate our function at a new point if we have a strong belief that this point will improve on the function value. A surrogate model is fit to our expensive function, and then optimized to find a new point that will minimize our expensive function. The surrogate model is a function that is relatively cheap to evaluate, and is used in-place of the expensive function. This process is known as surrogate-based optimization.
