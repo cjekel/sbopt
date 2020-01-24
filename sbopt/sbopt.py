@@ -118,7 +118,7 @@ class SbOpt(object):
             self.X[:, :self.n_dim] = self.transfrom_bounds(lhd)
         elif self.initial_design == 'random':
             x = np.random.random((self.initial_design_ndata, self.n_dim))
-            self.X[:, :self.n_dim] = self.transfrom_bounds(lhd)
+            self.X[:, :self.n_dim] = self.transfrom_bounds(x)
         else:
             err = str(self.initial_design) + ' is not valid initial design'
             raise ValueError(err)
