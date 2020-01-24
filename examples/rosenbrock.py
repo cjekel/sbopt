@@ -17,21 +17,21 @@ bounds[:, 1] = 3.0
 np.random.seed(1234124)
 
 # initialize the SbOpt object
-my_opt = sbopt.SbOpt(my_fun,  # your objective function to minimize
-                     bounds,  # bounds for your design variables
-                     initial_design='latin',  # initial design type
-                     # 'latin' default, or 'random'
-                     initial_design_ndata=20,  # number of initial points
-                     n_local_optimze=20,  # number of local BFGS optimizers
-                     # scipy radial basis function parameters see
-                     # https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.Rbf.html
-                     rbf_function='linear',  # default for SbOpt is 'linear'
-                     # while the default for scipy.interpolate.Rbf is
-                     # 'multi-quadratic'
-                     epsilon=None,  # (default)
-                     smooth=0.0,  # (default)
-                     norm='euclidean'  # (default)
-                     )
+my_opt = sbopt.RBfOpt(my_fun,  # your objective function to minimize
+                      bounds,  # bounds for your design variables
+                      initial_design='latin',  # initial design type
+                      # 'latin' default, or 'random'
+                      initial_design_ndata=20,  # number of initial points
+                      n_local_optimze=20,  # number of local BFGS optimizers
+                      # scipy radial basis function parameters see
+                      # https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.Rbf.html
+                      rbf_function='linear',  # default for SbOpt is 'linear'
+                      # while the default for scipy.interpolate.Rbf is
+                      # 'multi-quadratic'
+                      epsilon=None,  # (default)
+                      smooth=0.0,  # (default)
+                      norm='euclidean'  # (default)
+                      )
 # run the optimizer
 result = my_opt.minimize(max_iter=100,  # maximum number of iterations
                          # (default)
