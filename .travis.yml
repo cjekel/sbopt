@@ -15,6 +15,6 @@ before_script:
   - flake8 sbopt
   - pytest --version
 after_success:
-  - pip install python-coveralls
   - pip install coverage==4.5.4
+  - pip install python-coveralls
   - coveralls
