@@ -5,7 +5,7 @@ from scipy.spatial.distance import cdist
 from pyDOE import lhs
 
 
-class RbfOpt(object):
+class SBOpt(object):
 
     def __init__(self, min_function, bounds, initial_design='latin',
                  initial_design_ndata=20, n_local_optimze=20,
