@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='sbopt',
-    version='0.0.1',
+    version='0.0.2',
     author='Charles Jekel',
     author_email='cjekel@gmail.com',
     packages=['sbopt'],
