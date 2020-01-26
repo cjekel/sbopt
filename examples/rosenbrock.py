@@ -41,8 +41,14 @@ result = my_opt.minimize(max_iter=100,  # maximum number of iterations
                          # may be from an existing design point (default)
                          verbose=1,  # number of iterations to go for
                          # printing the status (default)
-                         initialize=True  # boolean, wether or not to
+                         initialize=True,  # boolean, wether or not to
                          # perform the initial sampling (default)
+                         strategy='local_best',  # str, which minimize strategy
+                         # to use. strategy='local_best' (default) adds only
+                         # one design point per iteration, where this selection
+                         # first looks at the best local optimizer result. 
+                         # strategy='all_local' adds the results from each of
+                         # the local optima in a single iteration.
                          )
 print('Best design variables:', result[0])
 print('Best function value:', result[1])
