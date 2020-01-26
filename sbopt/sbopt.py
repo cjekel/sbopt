@@ -66,7 +66,9 @@ class RbfOpt(object):
         self.min_x = np.nan
 
     def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1,
-                 initialize=True):
+                 initialize=True, strategy='local_best'):
+
+        assert strategy == 'local_best' or strategy == 'all_local'
 
         if initialize:
             self.initialize()
@@ -103,7 +105,10 @@ class RbfOpt(object):
                 res_y[j] = res[1]
 
             # add new design point
-            self.add_new_design_point(res_x, res_y, eps)
+            if strategy == 'local_best':
+                self.add_new_design_point(res_x, res_y, eps)
+            else:  # 'all_local'
+                self.add_all_local_points(res_x, res_y, eps)
 
             # find the min
             min_ind = np.nanargmin(self.X[:, self.n_dim])
@@ -213,3 +218,26 @@ class RbfOpt(object):
             safe = self.check_new_distance(x_temp, eps)
             if safe:
                 self.evaluate_new(x_temp.flatten())
+
+    def add_all_local_points(self, res_x, res_y, eps):
+        # find the best local optimum result
+        n_added = 0
+        while res_y.size > 0:
+            y_ind = np.nanargmin(res_y)
+            safe = self.check_new_distance(res_x[y_ind], eps)
+            # evaluate at the best x
+            if safe:
+                self.evaluate_new(res_x[y_ind])
+                n_added += 1
+            # delete this point, and try another
+            res_y = np.delete(res_y, y_ind, axis=0)
+            res_x = np.delete(res_x, y_ind, axis=0)
+
+        while n_added == 0:
+            # generate 1 random point, and attempt to add
+            x_temp = np.random.random((1, self.n_dim))
+            x_temp = self.transfrom_bounds(x_temp)
+            safe = self.check_new_distance(x_temp, eps)
+            if safe:
+                self.evaluate_new(x_temp.flatten())
+                n_added += 1
