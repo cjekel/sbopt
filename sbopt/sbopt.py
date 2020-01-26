@@ -173,7 +173,7 @@ class RbfOpt(object):
         return ((self.bounds[:, 1] - self.bounds[:, 0]) * x +
                 self.bounds[:, 0])
 
-    def evaluate_new(self, x):
+    def evaluate_new(self, x, fit=True):
         """
         Evaluate the function at a new x location, updating as necessary
         """
@@ -189,7 +189,8 @@ class RbfOpt(object):
         # store the new row within X
         self.X = np.vstack([self.X, new_row])
         # fit the Rbf
-        self.fit_rbf()
+        if fit:
+            self.fit_rbf()
 
     def check_new_distance(self, x, eps):
         # check if x is within a certain distance of previous points
@@ -227,7 +228,7 @@ class RbfOpt(object):
             safe = self.check_new_distance(res_x[y_ind], eps)
             # evaluate at the best x
             if safe:
-                self.evaluate_new(res_x[y_ind])
+                self.evaluate_new(res_x[y_ind], fit=False)
                 n_added += 1
             # delete this point, and try another
             res_y = np.delete(res_y, y_ind, axis=0)
@@ -239,5 +240,7 @@ class RbfOpt(object):
             x_temp = self.transfrom_bounds(x_temp)
             safe = self.check_new_distance(x_temp, eps)
             if safe:
-                self.evaluate_new(x_temp.flatten())
+                self.evaluate_new(x_temp.flatten(), fit=False)
                 n_added += 1
+        
+        self.fit_rbf()
