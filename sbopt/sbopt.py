@@ -242,5 +242,5 @@ class RbfOpt(object):
             if safe:
                 self.evaluate_new(x_temp.flatten(), fit=False)
                 n_added += 1
-        
+
         self.fit_rbf()

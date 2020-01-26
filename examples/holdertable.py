@@ -3,7 +3,7 @@ import sbopt
 
 
 def my_fun(x):
-    # define the Holder table function 
+    # define the Holder table function
     A = np.exp(np.abs(1.0 - (np.sqrt(x[0]**2 + x[1]**2) / np.pi)))
     return -np.abs(np.sin(x[0])*np.cos(x[1])*A)
 
