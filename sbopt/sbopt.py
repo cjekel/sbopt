@@ -193,18 +193,23 @@ class RbfOpt(object):
         # evaluate the function at the new desing location
         # print(x.shape)
         y = self.min_function(x)
-        # create the new row
-        new_row = np.zeros(self.n_dim + 1)
-        new_row[:self.n_dim] = x
-        new_row[self.n_dim:] = y
-        # print(new_row)
-        # print(self.X)
-        # store the new row within X
-        self.X = np.vstack([self.X, new_row])
-        # fit the Rbf
-        if fit:
-            # xold = self.X
-            self.fit_rbf()
+        # check if y is nan or inf
+        if np.isnan(y) or np.isinf(y):
+            return False
+        else:
+            # create the new row
+            new_row = np.zeros(self.n_dim + 1)
+            new_row[:self.n_dim] = x
+            new_row[self.n_dim:] = y
+            # print(new_row)
+            # print(self.X)
+            # store the new row within X
+            self.X = np.vstack([self.X, new_row])
+            # fit the Rbf
+            if fit:
+                # xold = self.X
+                self.fit_rbf()
+            return True
 
     def check_new_distance(self, x, eps):
         # check if x is within a certain distance of previous points
@@ -221,7 +226,7 @@ class RbfOpt(object):
             safe = self.check_new_distance(res_x[y_ind], eps)
             # evaluate at the best x
             if safe:
-                self.evaluate_new(res_x[y_ind])
+                safe = self.evaluate_new(res_x[y_ind])
             # delete this point, and try another
             res_y = np.delete(res_y, y_ind, axis=0)
             res_x = np.delete(res_x, y_ind, axis=0)
@@ -237,8 +242,9 @@ class RbfOpt(object):
             safe = self.check_new_distance(res_x[y_ind], eps)
             # evaluate at the best x
             if safe:
-                self.evaluate_new(res_x[y_ind], fit=False)
-                n_added += 1
+                safe = self.evaluate_new(res_x[y_ind], fit=False)
+                if safe:
+                    n_added += 1
             # delete this point, and try another
             res_y = np.delete(res_y, y_ind, axis=0)
             res_x = np.delete(res_x, y_ind, axis=0)
