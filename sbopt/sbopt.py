@@ -190,6 +190,7 @@ class RbfOpt(object):
         self.X = np.vstack([self.X, new_row])
         # fit the Rbf
         if fit:
+            # xold = self.X
             self.fit_rbf()
 
     def check_new_distance(self, x, eps):
@@ -212,13 +213,8 @@ class RbfOpt(object):
             res_y = np.delete(res_y, y_ind, axis=0)
             res_x = np.delete(res_x, y_ind, axis=0)
 
-        while not safe:
-            # generate 1 random point, and attempt to add
-            x_temp = np.random.random((1, self.n_dim))
-            x_temp = self.transfrom_bounds(x_temp)
-            safe = self.check_new_distance(x_temp, eps)
-            if safe:
-                self.evaluate_new(x_temp.flatten())
+        if not safe:
+            self.gen_random_point(eps)
 
     def add_all_local_points(self, res_x, res_y, eps):
         # find the best local optimum result
@@ -234,13 +230,17 @@ class RbfOpt(object):
             res_y = np.delete(res_y, y_ind, axis=0)
             res_x = np.delete(res_x, y_ind, axis=0)
 
-        while n_added == 0:
+        if n_added == 0:
+            self.gen_random_point(eps)
+        else:
+            self.fit_rbf()
+
+    def gen_random_point(self, eps):
+        safe = False
+        while not safe:
             # generate 1 random point, and attempt to add
             x_temp = np.random.random((1, self.n_dim))
             x_temp = self.transfrom_bounds(x_temp)
             safe = self.check_new_distance(x_temp, eps)
             if safe:
-                self.evaluate_new(x_temp.flatten(), fit=False)
-                n_added += 1
-
-        self.fit_rbf()
+                self.evaluate_new(x_temp.flatten())
