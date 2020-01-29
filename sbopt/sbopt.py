@@ -161,7 +161,14 @@ class RbfOpt(object):
         self.min_x = self.X[min_ind, :self.n_dim]
 
     def fit_rbf(self):
-        self.Rbf = Rbf(*self.X.T)
+        try:
+            self.Rbf = Rbf(*self.X.T)
+        except np.linalg.LinAlgError:
+            # the matrix is probably singular! let's try removing the last
+            # point then adding a random point that is 1e-3 from any previous
+            # point
+            self.X = np.delete(self.X, -1, axis=0)
+            self.gen_random_point(1e-3)
 
     def rbf_eval(self, x):
         return self.Rbf(*x.T)
