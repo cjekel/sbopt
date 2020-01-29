@@ -1,9 +1,9 @@
 import os
+os.environ['OMP_NUM_THREADS'] = '1'
+
 import unittest
 import numpy as np
 import sbopt
-
-os.environ['OMP_NUM_THREADS'] = '1'
 
 
 def my_fun(x):
