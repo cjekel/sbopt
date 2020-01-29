@@ -164,11 +164,17 @@ class RbfOpt(object):
         try:
             self.Rbf = Rbf(*self.X.T)
         except np.linalg.LinAlgError:
-            # the matrix is probably singular! let's try removing the last
-            # point then adding a random point that is 1e-3 from any previous
-            # point
-            self.X = np.delete(self.X, -1, axis=0)
-            self.gen_random_point(1e-3)
+            # the matrix is probably singular! let's try removing either most
+            # recent point, or the point closest to the most recent point
+            dist = cdist(self.X[:-1, :self.n_dim], self.X[-1:, :self.n_dim],
+                         metric=self.norm)
+            min_ind = np.nanargmin(dist)
+            if self.X[-1, self.n_dim] < self.X[min_ind, self.n_dim]:
+                self.X = np.delete(self.X, min_ind, axis=0)
+                self.gen_random_point(1e-3)
+            else:
+                self.X = np.delete(self.X, -1, axis=0)
+                self.gen_random_point(1e-3)
 
     def rbf_eval(self, x):
         return self.Rbf(*x.T)
