@@ -130,8 +130,9 @@ class RbfOpt(object):
                 print('\n')
                 verbose_count = 0
             if best_count == n_same_best:
-                print('Exiting. Best function value has not changed')
-                print('in', n_same_best, 'iterations.')
+                # if verbose_count > 1:
+                #     print('Exiting. Best function value has not changed')
+                #     print('in', n_same_best, 'iterations.')
                 break
 
         max_iter_conv = iteration == max_iter - 1
