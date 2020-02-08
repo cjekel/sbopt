@@ -57,13 +57,13 @@ class RbfOpt(object):
         # initialize the design data
         self.X = np.zeros((self.initial_design_ndata, self.n_dim+1))
         # self.y = np.zeros(self.initial_design_ndata)
-
         # initialize the rbf model
         self.Rbf = None
-
         # initialize best values
         self.min_y = np.nan
         self.min_x = np.nan
+        # initialize function calls
+        self.n_fun = 0
 
     def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1,
                  initialize=True, strategy='local_best'):
@@ -154,6 +154,7 @@ class RbfOpt(object):
         # evaluate initial design
         for i, j in enumerate(self.X):
             self.X[i, self.n_dim] = self.min_function(j[:self.n_dim])
+            self.n_fun += 1
 
     def find_min(self):
         # find the min
@@ -194,6 +195,7 @@ class RbfOpt(object):
         # evaluate the function at the new desing location
         # print(x.shape)
         y = self.min_function(x)
+        self.n_fun += 1
         # check if y is nan or inf
         if np.isnan(y) or np.isinf(y):
             return False
