@@ -22,9 +22,11 @@ class TestEverything(unittest.TestCase):
 
         np.random.seed(1234124)
 
-        my_opt = sbopt.RbfOpt(my_fun, bounds, initial_design_ndata=30,
-                              n_local_optimze=10)
-        x, y, _, _ = my_opt.minimize(verbose=1, eps=1e-4, strategy='all_local')
+        # my_opt = sbopt.RbfOpt(my_fun, bounds, initial_design_ndata=30,
+        #                       n_local_optimze=10)
+        # x, y, _, _ = my_opt.minimize(verbose=1, eps=1e-4, strategy='all_local')
+        my_opt = sbopt.RbfOpt(my_fun, bounds)
+        x, y, _, _ = my_opt.minimize(verbose=1)
         print(x, y)
         self.assertTrue(np.isclose(y, 0.0, rtol=1e-4, atol=1e-4))
         self.assertTrue(np.isclose(x[0], 1.0, rtol=1e-2, atol=1e-2))

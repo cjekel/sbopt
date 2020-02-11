@@ -112,7 +112,8 @@ class RbfOpt(object):
                 #                         'eps': 1.4901161193847656e-08})
                 res = fmin_slsqp(self.rbf_eval, x_samp[j],
                                  f_eqcons=None,
-                                 f_ieqcons=self.f_ineq, bounds=self.bounds,
+                                 #  f_ieqcons=self.f_ineq,
+                                 bounds=self.bounds,
                                  fprime=None, fprime_eqcons=None,
                                  fprime_ieqcons=None, args=(),
                                  iter=1000, acc=1e-16, iprint=0,
