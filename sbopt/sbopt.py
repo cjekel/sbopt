@@ -22,8 +22,8 @@
 
 import numpy as np
 from scipy.interpolate import Rbf
-from scipy.optimize import fmin_l_bfgs_b
-from scipy.optimize import minimize
+# from scipy.optimize import fmin_l_bfgs_b
+# from scipy.optimize import minimize
 from scipy.optimize import fmin_slsqp
 from scipy.spatial.distance import cdist
 from pyDOE import lhs
@@ -100,13 +100,15 @@ class RbfOpt(object):
 
             for j in range(self.n_local_optimze):
                 # print(x_samp[j], x_samp[j].shape)
-                # res = fmin_l_bfgs_b(self.rbf_eval, x_samp[j], approx_grad=True,
+                # res = fmin_l_bfgs_b(self.rbf_eval, x_samp[j],
+                #                     approx_grad=True,
                 #                     bounds=self.bounds)
                 # res = minimize(self.rbf_eval, x_samp[j], method='SLSQP',
                 #                bounds=self.bounds,
                 #                constraints={'ineq': self.ineq},
                 #                options={'maxiter': 10000,
-                #                         'ftol': 1e-06, 'iprint': 0, 'disp': False,
+                #                         'ftol': 1e-06, 'iprint': 0,
+                #                         'disp': False,
                 #                         'eps': 1.4901161193847656e-08})
                 res = fmin_slsqp(self.rbf_eval, x_samp[j],
                                  f_eqcons=None,
