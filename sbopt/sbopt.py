@@ -23,6 +23,8 @@
 import numpy as np
 from scipy.interpolate import Rbf
 from scipy.optimize import fmin_l_bfgs_b
+from scipy.optimize import minimize
+from scipy.optimize import fmin_slsqp
 from scipy.spatial.distance import cdist
 from pyDOE import lhs
 
@@ -64,11 +66,12 @@ class RbfOpt(object):
         self.min_x = np.nan
         # initialize function calls
         self.n_fun = 0
+        self.eps = None
 
     def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1,
                  initialize=True, strategy='local_best'):
-
         assert strategy == 'local_best' or strategy == 'all_local'
+        self.eps = eps
 
         if initialize:
             self.initialize()
@@ -97,8 +100,23 @@ class RbfOpt(object):
 
             for j in range(self.n_local_optimze):
                 # print(x_samp[j], x_samp[j].shape)
-                res = fmin_l_bfgs_b(self.rbf_eval, x_samp[j], approx_grad=True,
-                                    bounds=self.bounds)
+                # res = fmin_l_bfgs_b(self.rbf_eval, x_samp[j], approx_grad=True,
+                #                     bounds=self.bounds)
+                # res = minimize(self.rbf_eval, x_samp[j], method='SLSQP',
+                #                bounds=self.bounds,
+                #                constraints={'ineq': self.ineq},
+                #                options={'maxiter': 10000,
+                #                         'ftol': 1e-06, 'iprint': 0, 'disp': False,
+                #                         'eps': 1.4901161193847656e-08})
+                res = fmin_slsqp(self.rbf_eval, x_samp[j],
+                                 f_eqcons=None,
+                                 f_ieqcons=self.f_ineq, bounds=self.bounds,
+                                 fprime=None, fprime_eqcons=None,
+                                 fprime_ieqcons=None, args=(),
+                                 iter=1000, acc=1e-16, iprint=0,
+                                 disp=None, full_output=0,
+                                 epsilon=1.4901161193847656e-08)
+                # res = fm
                 # print(res)
                 res_x[j] = res[0]
                 # print(res_x)
@@ -220,6 +238,16 @@ class RbfOpt(object):
         dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
         # ensure that the minimum distance is greater than eps
         return np.nanmin(dist) > eps
+
+    def ineq(self, x):
+        x = x.reshape(1, -1)
+        dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
+        return np.nanmin(dist) - self.eps
+
+    def f_ineq(self, x):
+        x = x.reshape(1, -1)
+        dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
+        return dist.flatten() - self.eps
 
     def add_new_design_point(self, res_x, res_y, eps):
         # find the best local optimum result
