@@ -95,7 +95,7 @@ class RbfOpt(object):
             # set one of the local optimizers to start from the best location
             y_best_ind = np.nanargmin(self.X[:, -1])
             x_samp[0] = self.X[y_best_ind, :self.n_dim]
-
+            self.y_mean = np.nanmean(self.X[:, -1])
             for j in range(self.n_local_optimze):
                 # print(x_samp[j], x_samp[j].shape)
                 res = fmin_l_bfgs_b(self.my_obj, x_samp[j],
@@ -190,7 +190,9 @@ class RbfOpt(object):
         dist -= self.eps
         d = np.where(dist >= 0., 0., dist)
         pen = np.dot(d.T, d)[0, 0]
-        return f + pen
+        p = np.sum(np.abs(d))
+        # print(f, self.y_mean*p, self.y_mean*pen)
+        return f + self.y_mean*p + self.y_mean*pen
 
     def transfrom_bounds(self, x):
         """
