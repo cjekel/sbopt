@@ -25,6 +25,7 @@ from scipy.interpolate import Rbf
 # from scipy.optimize import fmin_l_bfgs_b
 # from scipy.optimize import minimize
 from scipy.optimize import fmin_slsqp
+# from scipy.optimize import fmin_cobyla
 from scipy.spatial.distance import cdist
 from pyDOE import lhs
 
@@ -115,10 +116,13 @@ class RbfOpt(object):
                                  #  f_ieqcons=self.f_ineq,
                                  bounds=self.bounds,
                                  fprime=None, fprime_eqcons=None,
-                                 fprime_ieqcons=None, args=(),
-                                 iter=1000, acc=1e-16, iprint=0,
+                                 fprime_ieqcons=None,
+                                 iter=1000, acc=1e-8, iprint=0,
                                  disp=None, full_output=0,
-                                 epsilon=1.4901161193847656e-08)
+                                 epsilon=1.e-06)
+                # res = fmin_cobyla(self.rbf_eval, x_samp[j], self.f_ineq,
+                #                   rhobeg=1.0, rhoend=1e-6, maxfun=10000,
+                #                   disp=None, catol=1e-16)
                 # res = fm
                 # print(res)
                 res_x[j] = res[0]
