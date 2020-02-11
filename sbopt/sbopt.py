@@ -64,12 +64,13 @@ class RbfOpt(object):
         self.min_x = np.nan
         # initialize function calls
         self.n_fun = 0
+        self.eps = None
 
     def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1,
                  initialize=True, strategy='local_best'):
 
         assert strategy == 'local_best' or strategy == 'all_local'
-
+        self.eps = eps
         if initialize:
             self.initialize()
 
@@ -97,7 +98,8 @@ class RbfOpt(object):
 
             for j in range(self.n_local_optimze):
                 # print(x_samp[j], x_samp[j].shape)
-                res = fmin_l_bfgs_b(self.rbf_eval, x_samp[j], approx_grad=True,
+                res = fmin_l_bfgs_b(self.my_obj, x_samp[j],
+                                    approx_grad=True,
                                     bounds=self.bounds)
                 # print(res)
                 res_x[j] = res[0]
@@ -180,6 +182,15 @@ class RbfOpt(object):
 
     def rbf_eval(self, x):
         return self.Rbf(*x.T)
+
+    def my_obj(self, x):
+        f = self.Rbf(*x.T)
+        x = x.reshape(1, -1)
+        dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
+        dist -= self.eps
+        d = np.where(dist >= 0., 0., dist)
+        pen = np.dot(d.T, d)[0, 0]
+        return f + pen
 
     def transfrom_bounds(self, x):
         """
