@@ -143,14 +143,16 @@ class RbfOpt(object):
         max_iter_conv = iteration == max_iter - 1
         best_count_conv = best_count == n_same_best
         if self.polish:
-            res = fmin_l_bfgs_b(self.min_function, self.min_x,
-                                approx_grad=True,
-                                bounds=self.bounds)
-            ind = np.nanargmin((res[1], self.min_y))
+            res_x, res_y, d = fmin_l_bfgs_b(self.min_function, self.min_x,
+                                            approx_grad=True,
+                                            bounds=self.bounds)
+            ind = np.nanargmin((res_y, self.min_y))
             if ind == 1:
                 # if polish better, save the results
-                self.min_x = res[0]
-                self.min_y = res[1]
+                self.min_x = res_x
+                self.min_y = res_y
+            # update the number of function calls
+            self.n_fun += d['funcalls']
         return self.min_x, self.min_y, max_iter_conv, best_count_conv
 
     def initialize(self):
