@@ -31,8 +31,8 @@ class RbfOpt(object):
 
     def __init__(self, min_function, bounds, initial_design='latin',
                  initial_design_ndata=20, n_local_optimze=20,
-                 rbf_function='linear', epsilon=None, smooth=0.0,
-                 norm='euclidean'):
+                 polish=False, rbf_function='linear', epsilon=None,
+                 smooth=0.0, norm='euclidean'):
 
         self.min_function = min_function
         n_dim, m = bounds.shape
@@ -45,6 +45,7 @@ class RbfOpt(object):
 
         self.n_local_optimze = n_local_optimze  # number of local optimizers
 
+        self.polish = polish
         # scipy rbf function default is 'multiquadric'
         # however, let's default to linear since it is simpler
         self.rbf_function = rbf_function
@@ -141,6 +142,15 @@ class RbfOpt(object):
 
         max_iter_conv = iteration == max_iter - 1
         best_count_conv = best_count == n_same_best
+        if self.polish:
+            res = fmin_l_bfgs_b(self.min_function, self.min_x,
+                                approx_grad=True,
+                                bounds=self.bounds)
+            ind = np.nanargmin((res[1], self.min_y))
+            if ind == 1:
+                # if polish better, save the results
+                self.min_x = res[0]
+                self.min_y = res[1]
         return self.min_x, self.min_y, max_iter_conv, best_count_conv
 
     def initialize(self):
