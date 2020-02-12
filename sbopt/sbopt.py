@@ -147,7 +147,7 @@ class RbfOpt(object):
                                             approx_grad=True,
                                             bounds=self.bounds)
             ind = np.nanargmin((res_y, self.min_y))
-            if ind == 1:
+            if ind == 0:
                 # if polish better, save the results
                 self.min_x = res_x
                 self.min_y = res_y
