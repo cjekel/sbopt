@@ -34,11 +34,11 @@ my_opt = sbopt.RbfOpt(my_fun,  # your objective function to minimize
                       norm='euclidean'  # (default)
                       )
 # run the optimizer
-result = my_opt.minimize(max_iter=1,  # maximum number of iterations
+result = my_opt.minimize(max_iter=100,  # maximum number of iterations
                          # (default)
                          n_same_best=20,  # number of iterations to run
                          # without improving best function value (default)
-                         eps=1e-1,  # minimum distance a new design point
+                         eps=2e-3,  # minimum distance a new design point
                          # may be from an existing design point (default)
                          verbose=1,  # number of iterations to go for
                          # printing the status (default)
@@ -56,8 +56,8 @@ print('Best function value:', result[1])
 print('Convergence by max iteration:', result[2])
 print('Convergence by n_same_best:', result[3])
 
-
 nval = 1000
+nval = 100
 x = np.linspace(0.9, 1.1, nval)
 xx, yy = np.meshgrid(x, x)
 

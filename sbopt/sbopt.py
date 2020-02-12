@@ -184,15 +184,41 @@ class RbfOpt(object):
         return self.Rbf(*x.T)
 
     def my_obj(self, x):
+        if np.isnan(x).all():
+            return np.inf
         f = self.Rbf(*x.T)
         x = x.reshape(1, -1)
+        # print(x)
         dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
+        # print(dist)
         dist -= self.eps
-        d = np.where(dist >= 0., 0., dist)
-        pen = np.dot(d.T, d)[0, 0]
-        p = np.sum(np.abs(d))
-        # print(f, self.y_mean*p, self.y_mean*pen)
-        return f + self.y_mean*p + self.y_mean*pen
+        if np.nanmin(dist) >= 0.:
+            return f
+        else:
+            return self.my_pen(f, dist)
+        # d = np.where(dist >= 0., 0., dist)
+        # pen = np.dot(d.T, d)[0, 0]
+        # p = np.sum(np.abs(d))
+        # # print(f, self.y_mean*p, self.y_mean*pen)
+        # return f + self.y_mean*p + self.y_mean*pen
+
+    def my_pen(self, f, dist):
+        C = self.eps/3
+        p = 1./3.
+        t = np.zeros(len(self.X))
+        for i, j in enumerate(dist):
+            if j >= 0:
+                pass
+            else:
+                g0 = C*np.abs(j)**p
+                gi = j
+                # print(gi, g0, j)
+                if gi >= g0:
+                    t[i] = np.abs(j)*(1.0 / gi)
+                else:
+                    t[i] = np.abs(j)*((1.0/g0)*((gi/g0)**2 - 3.0*(gi/g0) + 3.))
+        # print(np.mean(t), f, f + np.mean(t))
+        return f + np.mean(t)
 
     def transfrom_bounds(self, x):
         """
