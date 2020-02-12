@@ -64,11 +64,15 @@ class RbfOpt(object):
         self.min_x = np.nan
         # initialize function calls
         self.n_fun = 0
+        self.eps = None
+        # self.alpha = None
+        self.strategy = None
 
     def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1,
                  initialize=True, strategy='local_best'):
-
-        assert strategy == 'local_best' or strategy == 'all_local'
+        self.eps = eps
+        assert strategy in ['local_best', 'all_local', 'all_local_reflect']
+        self.strategy = strategy
 
         if initialize:
             self.initialize()
@@ -214,12 +218,15 @@ class RbfOpt(object):
                 self.fit_rbf()
             return True
 
-    def check_new_distance(self, x, eps):
+    def check_new_distance(self, x, eps, return_ind=False):
         # check if x is within a certain distance of previous points
         x = x.reshape(1, -1)
         dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
         # ensure that the minimum distance is greater than eps
-        return np.nanmin(dist) > eps
+        if return_ind:
+            return np.nanmin(dist) > eps, np.nanargmin(dist), np.nanmin(dist)
+        else:
+            return np.nanmin(dist) > eps
 
     def add_new_design_point(self, res_x, res_y, eps):
         # find the best local optimum result
@@ -242,7 +249,25 @@ class RbfOpt(object):
         n_added = 0
         while res_y.size > 0:
             y_ind = np.nanargmin(res_y)
-            safe = self.check_new_distance(res_x[y_ind], eps)
+            safe, ind, d = self.check_new_distance(res_x[y_ind], eps,
+                                                   return_ind=True)
+            if not safe and self.strategy == 'all_local_reflect':
+                # print(res_x[y_ind], self.X[ind, :self.n_dim], d, d > 0.)
+                if d > 0.0:
+                    direction = self.X[ind, :self.n_dim] - res_x[y_ind]
+                    t = self.X[ind, :self.n_dim] + ((eps+d)/d)*(direction)
+                else:
+                    direction = np.random.normal(size=self.n_dim)
+                    mag = np.linalg.norm(direction)
+                    t = self.X[ind, :self.n_dim] + ((eps)/mag)*(direction)
+                res_x[y_ind] = t
+                # mag = np.linalg.norm(direction)
+                # perform reflection and re-evaluate the new point
+                # safe, ind2, d2 = self.check_new_distance(t, eps,
+                #                                          return_ind=True)
+                safe = self.check_new_distance(t, eps)
+                # print('Reflecting point', safe, ind, ind2, t, mag, d, d2)
+
             # evaluate at the best x
             if safe:
                 safe = self.evaluate_new(res_x[y_ind], fit=False)

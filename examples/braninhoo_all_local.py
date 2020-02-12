@@ -27,9 +27,11 @@ np.random.seed(1234124)
 # initialize the RbfOpt object
 my_opt = sbopt.RbfOpt(my_fun,  # your objective function to minimize
                       bounds,  # bounds for your design variables
-                      )
+                      n_local_optimze=5,
+                      initial_design_ndata=5)
 # run the optimizer
-result = my_opt.minimize(strategy='all_local', max_iter=10)
+result = my_opt.minimize(strategy='all_local_reflect', eps=1e-3,
+                         max_iter=100)
 print('Best design variables:', result[0])
 print('Best function value:', result[1])
 print('Convergence by max iteration:', result[2])
