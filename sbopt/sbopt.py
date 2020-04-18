@@ -208,8 +208,8 @@ class RbfOpt(object):
         return self.Rbf(*x.T)
 
     def rbf_EI(self, x):
-        if x.n_dim < 2:
-            x.resize(1, -1)
+        if x.ndim < 2:
+            x = x.reshape(1, -1)
         y_hat = self.Rbf(*x.T)
         Ad = cdist(x, self.X[:, :self.n_dim])
         pre_var = np.dot(np.dot(Ad, linalg.inv(self.Rbf.A)), Ad.T).diagonal()
