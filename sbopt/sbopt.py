@@ -72,6 +72,7 @@ class RbfOpt(object):
         # initialize function calls
         self.n_fun = 0
         self.eps = None
+        self.EI_x = None  # Expected improvement optimum
         # self.alpha = None
         self.strategy = None
         # store deleted points
@@ -267,6 +268,7 @@ class RbfOpt(object):
         safe = False
         while not safe and res_y.size > 0:
             y_ind = np.nanargmin(res_y)
+            self.EI_x = res_x[y_ind]
             safe = self.check_new_distance(res_x[y_ind], eps)
             # evaluate at the best x
             if safe:
