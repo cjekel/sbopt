@@ -68,6 +68,8 @@ class RbfOpt(object):
         self.eps = None
         # self.alpha = None
         self.strategy = None
+        # store deleted points
+        self.del_x = []
 
     def minimize(self, max_iter=100, n_same_best=20, eps=1e-6, verbose=1,
                  initialize=True, strategy='local_best'):
@@ -188,9 +190,11 @@ class RbfOpt(object):
                          metric=self.norm)
             min_ind = np.nanargmin(dist)
             if self.X[-1, self.n_dim] < self.X[min_ind, self.n_dim]:
+                self.del_x.append(self.X[min_ind])
                 self.X = np.delete(self.X, min_ind, axis=0)
                 self.gen_random_point(1e-3)
             else:
+                self.del_x.append(self.X[-1])
                 self.X = np.delete(self.X, -1, axis=0)
                 self.gen_random_point(1e-3)
 
