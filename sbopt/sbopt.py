@@ -180,7 +180,7 @@ class RbfOpt(object):
 
     def fit_rbf(self):
         try:
-            self.Rbf = Rbf(*self.X.T)
+            self.Rbf = Rbf(*self.X.T, function=self.rbf_function)
         except np.linalg.LinAlgError:
             # the matrix is probably singular! let's try removing either most
             # recent point, or the point closest to the most recent point
