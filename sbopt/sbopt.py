@@ -21,9 +21,11 @@
 # SOFTWARE.
 
 import numpy as np
+from scipy import linalg
 from scipy.interpolate import Rbf
 from scipy.optimize import fmin_l_bfgs_b
 from scipy.spatial.distance import cdist
+from scipy.stats import norm
 from pyDOE import lhs
 
 
@@ -32,7 +34,11 @@ class RbfOpt(object):
     def __init__(self, min_function, bounds, initial_design='latin',
                  initial_design_ndata=20, n_local_optimze=20,
                  polish=False, rbf_function='linear', epsilon=None,
-                 smooth=0.0, norm='euclidean'):
+                 smooth=0.0, norm='euclidean', acquisition='rbf'):
+        acq_map = {'rbf': self.rbf_eval, 'EI': self.rbf_EI}
+        assert acquisition in acq_map.keys()
+        self.acquisition = acquisition
+        self.acq_fun = acq_map[acquisition]
 
         self.min_function = min_function
         n_dim, m = bounds.shape
@@ -104,7 +110,7 @@ class RbfOpt(object):
 
             for j in range(self.n_local_optimze):
                 # print(x_samp[j], x_samp[j].shape)
-                res = fmin_l_bfgs_b(self.rbf_eval, x_samp[j], approx_grad=True,
+                res = fmin_l_bfgs_b(self.acq_fun, x_samp[j], approx_grad=True,
                                     bounds=self.bounds)
                 # print(res)
                 res_x[j] = res[0]
@@ -200,6 +206,18 @@ class RbfOpt(object):
 
     def rbf_eval(self, x):
         return self.Rbf(*x.T)
+
+    def rbf_EI(self, x):
+        if x.n_dim < 2:
+            x.resize(1, -1)
+        y_hat = self.Rbf(*x.T)
+        Ad = cdist(x, self.X[:, :self.n_dim])
+        pre_var = np.dot(np.dot(Ad, linalg.inv(self.Rbf.A)), Ad.T).diagonal()
+        del_pbs = (self.min_y - y_hat)/pre_var
+        Phi = norm.cdf(del_pbs)
+        phi = norm.pdf(del_pbs)
+        EI = (self.min_y - y_hat)*Phi + pre_var*phi
+        return EI
 
     def transfrom_bounds(self, x):
         """
