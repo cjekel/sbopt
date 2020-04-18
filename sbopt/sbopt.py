@@ -218,7 +218,7 @@ class RbfOpt(object):
         Phi = norm.cdf(del_pbs)
         phi = norm.pdf(del_pbs)
         EI = (self.min_y - y_hat)*Phi + pre_var*phi
-        return EI
+        return -EI
 
     def transfrom_bounds(self, x):
         """
