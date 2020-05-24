@@ -33,12 +33,17 @@ class RbfOpt(object):
 
     def __init__(self, min_function, bounds, initial_design='latin',
                  initial_design_ndata=20, n_local_optimze=20,
-                 polish=False, rbf_function='linear', epsilon=None,
-                 smooth=0.0, norm='euclidean', acquisition='rbf'):
-        acq_map = {'rbf': self.rbf_eval, 'EI': self.rbf_EI}
+                 polish=False, rbf_function='multiquadric', epsilon=None,
+                 smooth=0.0, metric='euclidean', acquisition='rbf',
+                 exploration='random'):
+        acq_map = {'rbf': self.rbf_eval, 'EI': self.rbf_EI,
+                   'distance': self.distance_ei}
         assert acquisition in acq_map.keys()
         self.acquisition = acquisition
         self.acq_fun = acq_map[acquisition]
+        possible_explorations = ['random', 'distance']
+        assert exploration in possible_explorations
+        self.exploration = exploration
 
         self.min_function = min_function
         n_dim, m = bounds.shape
@@ -58,7 +63,7 @@ class RbfOpt(object):
         # scipy rbf defaults
         self.epsilon = epsilon
         self.smooth = smooth
-        self.norm = norm
+        self.metric = metric
         self.mode = '1-D'
 
         # initialize the design data
@@ -97,26 +102,8 @@ class RbfOpt(object):
         for iteration in range(max_iter):
 
             verbose_count += 1
-            res_x = np.zeros((self.n_local_optimze, self.n_dim))
-            res_y = np.zeros(self.n_local_optimze)
 
-            # generate randoms tarting points for the local optimizer
-            x_samp = np.random.random((self.n_local_optimze, self.n_dim))
-            x_samp = self.transfrom_bounds(x_samp)
-            # print(x_samp.shape)
-
-            # set one of the local optimizers to start from the best location
-            y_best_ind = np.nanargmin(self.X[:, -1])
-            x_samp[0] = self.X[y_best_ind, :self.n_dim]
-
-            for j in range(self.n_local_optimze):
-                # print(x_samp[j], x_samp[j].shape)
-                res = fmin_l_bfgs_b(self.acq_fun, x_samp[j], approx_grad=True,
-                                    bounds=self.bounds)
-                # print(res)
-                res_x[j] = res[0]
-                # print(res_x)
-                res_y[j] = res[1]
+            res_x, res_y = self.optimize(self.acq_fun)
 
             # add new design point
             if strategy == 'local_best':
@@ -164,6 +151,28 @@ class RbfOpt(object):
             self.n_fun += d['funcalls']
         return self.min_x, self.min_y, max_iter_conv, best_count_conv
 
+    def optimize(self, function):
+        # generate randoms tarting points for the local optimizer
+        x_samp = np.random.random((self.n_local_optimze, self.n_dim))
+        x_samp = self.transfrom_bounds(x_samp)
+        # print(x_samp.shape)
+
+        # set one of the local optimizers to start from the best location
+        y_best_ind = np.nanargmin(self.X[:, -1])
+        x_samp[0] = self.X[y_best_ind, :self.n_dim]
+        res_x = np.zeros((self.n_local_optimze, self.n_dim))
+        res_y = np.zeros(self.n_local_optimze)
+        for j in range(self.n_local_optimze):
+            # print(x_samp[j], x_samp[j].shape)
+            res = fmin_l_bfgs_b(function, x_samp[j], approx_grad=True,
+                                bounds=self.bounds, epsilon=1e-3)
+            # print(res)
+            res_x[j] = res[0]
+            # print(res_x)
+            res_y[j] = res[1]
+            # print(res_y)
+        return res_x, res_y
+
     def initialize(self):
         if self.initial_design == 'latin':
             # perform initial design
@@ -194,7 +203,7 @@ class RbfOpt(object):
             # the matrix is probably singular! let's try removing either most
             # recent point, or the point closest to the most recent point
             dist = cdist(self.X[:-1, :self.n_dim], self.X[-1:, :self.n_dim],
-                         metric=self.norm)
+                         metric=self.metric)
             min_ind = np.nanargmin(dist)
             if self.X[-1, self.n_dim] < self.X[min_ind, self.n_dim]:
                 self.del_x.append(self.X[min_ind])
@@ -218,7 +227,7 @@ class RbfOpt(object):
         Phi = norm.cdf(del_pbs)
         phi = norm.pdf(del_pbs)
         EI = (self.min_y - y_hat)*Phi + pre_var*phi
-        return -EI
+        return -EI*1e16
 
     def transfrom_bounds(self, x):
         """
@@ -256,7 +265,7 @@ class RbfOpt(object):
     def check_new_distance(self, x, eps, return_ind=False):
         # check if x is within a certain distance of previous points
         x = x.reshape(1, -1)
-        dist = cdist(self.X[:, :self.n_dim], x, metric=self.norm)
+        dist = cdist(self.X[:, :self.n_dim], x, metric=self.metric)
         # ensure that the minimum distance is greater than eps
         if return_ind:
             return np.nanmin(dist) > eps, np.nanargmin(dist), np.nanmin(dist)
@@ -276,9 +285,11 @@ class RbfOpt(object):
             # delete this point, and try another
             res_y = np.delete(res_y, y_ind, axis=0)
             res_x = np.delete(res_x, y_ind, axis=0)
-
         if not safe:
-            self.gen_random_point(eps)
+            if self.exploration == 'random':
+                self.gen_random_point(eps)
+            elif self.exploration == 'distance':
+                self.max_min_distance(eps)
 
     def add_all_local_points(self, res_x, res_y, eps):
         # find the best local optimum result
@@ -314,7 +325,10 @@ class RbfOpt(object):
             res_x = np.delete(res_x, y_ind, axis=0)
 
         if n_added == 0:
-            self.gen_random_point(eps)
+            if self.exploration == 'random':
+                self.gen_random_point(eps)
+            elif self.exploration == 'distance':
+                self.max_min_distance(eps)
         else:
             self.fit_rbf()
 
@@ -327,3 +341,35 @@ class RbfOpt(object):
             safe = self.check_new_distance(x_temp, eps)
             if safe:
                 self.evaluate_new(x_temp.flatten())
+
+    def distance(self, x):
+        x = x.reshape(1, -1)
+        d = cdist(x, self.X[:, :self.n_dim], metric=self.metric)
+        min_distance_form_point = d.min(axis=1)
+        return -min_distance_form_point
+
+    def distance_ei(self, x):
+        x = x.reshape(1, -1)
+        d = cdist(x, self.X[:, :self.n_dim], metric=self.metric)
+        min_distance_form_point = d.min(axis=1)
+        # evaluate rbf
+        Y_rbf = self.Rbf(*x.T)
+        # expected improvement
+        pbs_ei = self.min_y - Y_rbf
+        # function for v
+        v = pbs_ei+min_distance_form_point
+        return -v
+
+    def max_min_distance(self, eps):
+        res_x, res_y = self.optimize(self.distance)
+        safe = False
+        while not safe and res_y.size > 0:
+            y_ind = np.nanargmax(res_y)
+            self.EI_x = res_x[y_ind]
+            safe = self.check_new_distance(res_x[y_ind], eps)
+            # evaluate at the best x
+            if safe:
+                safe = self.evaluate_new(res_x[y_ind])
+            # delete this point, and try another
+            res_y = np.delete(res_y, y_ind, axis=0)
+            res_x = np.delete(res_x, y_ind, axis=0)
